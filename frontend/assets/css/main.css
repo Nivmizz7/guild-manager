@@ -1,0 +1,130 @@
+:root {
+  --horde-primary: #8c1616;
+  --horde-secondary: #d4af37;
+  --alliance-primary: #1a5490;
+  --alliance-secondary: #d4af37;
+  --bg-dark: #0d0d0d;
+  --parchment: #f4e4c1;
+  --text-light: #ffe6c7;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Georgia', 'Times New Roman', serif;
+  background: linear-gradient(135deg, #1a1a1a 0%, #0d0d0d 100%);
+  color: var(--text-light);
+  min-height: 100vh;
+}
+
+.horde-theme {
+  --primary: var(--horde-primary);
+  --secondary: var(--horde-secondary);
+}
+
+.alliance-theme {
+  --primary: var(--alliance-primary);
+  --secondary: var(--alliance-secondary);
+}
+
+.wow-panel {
+  background: linear-gradient(135deg, rgba(20, 20, 20, 0.95) 0%, rgba(10, 10, 10, 0.98) 100%);
+  border: 3px solid var(--secondary, #d4af37);
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 
+    0 0 20px rgba(212, 175, 55, 0.3),
+    inset 0 0 50px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.wow-panel::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  background: linear-gradient(45deg, var(--secondary, #d4af37), transparent);
+  border-radius: 8px;
+  z-index: -1;
+  opacity: 0.3;
+}
+
+.wow-button {
+  background: linear-gradient(135deg, var(--primary, #8c1616) 0%, rgba(0, 0, 0, 0.8) 100%);
+  border: 2px solid var(--secondary, #d4af37);
+  color: var(--text-light);
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+.wow-button:hover {
+  background: linear-gradient(135deg, var(--secondary, #d4af37) 0%, var(--primary, #8c1616) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(212, 175, 55, 0.4);
+}
+
+.wow-input,
+.wow-select,
+.wow-textarea {
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid var(--secondary, #d4af37);
+  color: var(--text-light);
+  padding: 0.75rem;
+  font-size: 1rem;
+  border-radius: 4px;
+  width: 100%;
+  font-family: 'Georgia', 'Times New Roman', serif;
+}
+
+.wow-input:focus,
+.wow-select:focus,
+.wow-textarea:focus {
+  outline: none;
+  border-color: var(--primary, #8c1616);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+h1, h2, h3 {
+  color: var(--secondary, #d4af37);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  margin-bottom: 1rem;
+}
+
+.class-Warrior { color: #C69B6D; }
+.class-Paladin { color: #F48CBA; }
+.class-Hunter { color: #AAD372; }
+.class-Rogue { color: #FFF468; }
+.class-Priest { color: #FFFFFF; }
+.class-Death-Knight { color: #C41E3A; }
+.class-Shaman { color: #0070DD; }
+.class-Mage { color: #3FC7EB; }
+.class-Warlock { color: #8788EE; }
+.class-Monk { color: #00FF98; }
+.class-Druid { color: #FF7C0A; }
+.class-Demon-Hunter { color: #A330C9; }
+.class-Evoker { color: #33937F; }
+
+.quality-Poor { color: #9d9d9d; }
+.quality-Common { color: #ffffff; }
+.quality-Uncommon { color: #1eff00; }
+.quality-Rare { color: #0070dd; }
+.quality-Epic { color: #a335ee; }
+.quality-Legendary { color: #ff8000; }

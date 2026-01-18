@@ -1,0 +1,21 @@
+{
+  "name": "wow-guild-manager",
+  "version": "1.0.0",
+  "description": "Application de gestion de guilde World of Warcraft",
+  "private": true,
+  "scripts": {
+    "postinstall": "cd backend && npm install && cd ../frontend && npm install",
+    "prebuild": "npm install",
+    "build": "cd backend && npm run build",
+    "prestart": "npm run build",
+    "start": "concurrently --kill-others \"node backend/dist/index.js\" \"cd frontend && npm run dev\"",
+    "dev": "npm start",
+    "clean": "rm -rf backend/dist frontend/.nuxt frontend/.output data/*.json"
+  },
+  "keywords": ["wow", "guild", "manager"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
