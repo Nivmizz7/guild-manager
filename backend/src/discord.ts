@@ -70,6 +70,10 @@ export class DiscordAuth {
     let isAdmin = false;
     try {
       if (this.guildId && this.adminRoleId) {
+        console.log('[Discord] Checking admin role for user:', user.username);
+        console.log('[Discord] Guild ID:', this.guildId);
+        console.log('[Discord] Required Admin Role ID:', this.adminRoleId);
+        
         const memberResponse = await axios.get(
           `${DISCORD_API}/users/@me/guilds/${this.guildId}/member`,
           {
@@ -78,11 +82,14 @@ export class DiscordAuth {
         );
 
         const roles = memberResponse.data.roles || [];
+        console.log('[Discord] User roles in guild:', roles);
         isAdmin = roles.includes(this.adminRoleId);
+        console.log('[Discord] Has admin role:', isAdmin);
+      } else {
+        console.warn('[Discord] Guild ID or Admin Role ID not configured - skipping admin check');
       }
-    } catch (error) {
-      // User not in guild or bot not in server
-      console.log('User not in guild or cannot verify roles');
+    } catch (error: any) {
+      console.error('[Discord] Failed to check admin role:', error.response?.data || error.message);
     }
 
     return {

@@ -6,7 +6,10 @@ export const useAuth = () => {
     try {
       const data = await api.getMe();
       user.value = data.user;
+      console.log('[useAuth] User fetched:', user.value);
+      console.log('[useAuth] isAdmin:', user.value?.isAdmin);
     } catch (error) {
+      console.error('[useAuth] Failed to fetch user:', error);
       user.value = null;
     }
   };
@@ -30,7 +33,7 @@ export const useAuth = () => {
     }
   };
 
-  const isAdmin = computed(() => user.value?.isAdmin || false);
+  const isAdmin = computed(() => user.value?.isAdmin === true);
   const isLoggedIn = computed(() => !!user.value);
 
   return {

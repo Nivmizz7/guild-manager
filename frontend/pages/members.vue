@@ -1,10 +1,14 @@
 <template>
   <div class="container">
-    <h1>👥 Gestion des membres</h1>
+    <h1>{{ t('members') }}</h1>
 
-    <div class="wow-panel" style="margin-bottom: 2rem;">
+    <div v-if="!isAdmin" class="wow-panel" style="margin-bottom: 1rem; background: rgba(255,165,0,0.1);">
+      <p style="margin: 0;">📖 Mode lecture seule - Vous devez avoir le rôle admin pour modifier les membres</p>
+    </div>
+
+    <div v-if="isAdmin" class="wow-panel" style="margin-bottom: 2rem;">
       <button @click="toggleForm" class="wow-button">
-        {{ showForm ? 'Annuler' : '+ Ajouter un membre' }}
+        {{ showForm ? 'Annuler' : (editingMember ? 'Annuler' : '+ Ajouter un membre') }}
       </button>
 
       <form v-if="showForm" @submit.prevent="saveMember" style="margin-top: 2rem;">

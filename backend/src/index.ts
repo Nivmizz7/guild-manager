@@ -96,8 +96,10 @@ app.get('/api/auth/discord/callback', async (req, res) => {
 
 app.get('/api/auth/me', (req: AuthRequest, res) => {
   if (req.session?.user) {
+    console.log('[API] /auth/me - User session:', req.session.user);
     res.json({ user: req.session.user });
   } else {
+    console.log('[API] /auth/me - No user session');
     res.json({ user: null });
   }
 });
