@@ -10,7 +10,7 @@ export interface AuthRequest extends Request {
 
 export function requireAuth(req: AuthRequest, res: Response, next: NextFunction) {
   if (!req.session?.user) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    return res.status(401).json({ error: 'Unauthorized - Discord login required' });
   }
   req.user = req.session.user;
   next();
@@ -18,10 +18,10 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
 
 export function requireAdmin(req: AuthRequest, res: Response, next: NextFunction) {
   if (!req.session?.user) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    return res.status(401).json({ error: 'Unauthorized - Discord login required' });
   }
   if (!req.session.user.isAdmin) {
-    return res.status(403).json({ error: 'Forbidden - Admin role required' });
+    return res.status(403).json({ error: 'Forbidden - Admin role required in Discord server' });
   }
   req.user = req.session.user;
   next();

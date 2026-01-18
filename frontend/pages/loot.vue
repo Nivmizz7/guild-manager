@@ -93,6 +93,7 @@
           <div>Boss</div>
           <div>Localisation</div>
           <div>Date</div>
+          <div v-if="isAdmin">Actions</div>
         </div>
 
         <div v-for="item in filteredLoot" :key="item.id" class="table-row">
@@ -104,6 +105,10 @@
           <div>{{ item.boss || '-' }}</div>
           <div>{{ item.location || '-' }}</div>
           <div>{{ formatDate(item.date) }}</div>
+          <div v-if="isAdmin" class="actions">
+            <button @click="editLoot(item)" class="edit-btn" title="Modifier">✏️</button>
+            <button @click="deleteLootById(item.id)" class="delete-btn" title="Supprimer">🗑️</button>
+          </div>
         </div>
       </div>
 
@@ -247,7 +252,7 @@ label {
 .table-header,
 .table-row {
   display: grid;
-  grid-template-columns: 2fr 0.5fr 1fr 1.2fr 1.5fr 1.2fr 1.5fr 1fr;
+  grid-template-columns: 2fr 0.5fr 1fr 1.2fr 1.5fr 1.2fr 1.5fr 1fr 0.8fr;
   gap: 0.5rem;
   padding: 0.75rem;
   border-bottom: 1px solid rgba(212, 175, 55, 0.3);
@@ -286,5 +291,25 @@ label {
   font-size: 1.5rem;
   font-weight: bold;
   color: var(--secondary);
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.edit-btn,
+.delete-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: transform 0.2s;
+}
+
+.edit-btn:hover,
+.delete-btn:hover {
+  transform: scale(1.2);
 }
 </style>

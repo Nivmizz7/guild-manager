@@ -5,7 +5,7 @@ export const useAuth = () => {
   const fetchUser = async () => {
     try {
       const data = await api.getMe();
-      user.value = data.user || data;
+      user.value = data.user;
     } catch (error) {
       user.value = null;
     }
@@ -15,8 +15,9 @@ export const useAuth = () => {
     try {
       const { url } = await api.getAuthUrl();
       window.location.href = url;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to get auth URL:', error);
+      alert('Erreur: Discord OAuth non configuré. Voir SETUP.txt pour les instructions.');
     }
   };
 

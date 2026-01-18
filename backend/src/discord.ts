@@ -26,7 +26,14 @@ export class DiscordAuth {
     this.adminRoleId = process.env.DISCORD_ADMIN_ROLE_ID || '';
   }
 
+  isConfigured(): boolean {
+    return !!(this.clientId && this.clientSecret && this.redirectUri);
+  }
+
   getAuthUrl(): string {
+    if (!this.isConfigured()) {
+      throw new Error('Discord OAuth not configured');
+    }
     const params = new URLSearchParams({
       client_id: this.clientId,
       redirect_uri: this.redirectUri,
@@ -62,15 +69,17 @@ export class DiscordAuth {
     // Check if user has admin role
     let isAdmin = false;
     try {
-      const memberResponse = await axios.get(
-        `${DISCORD_API}/users/@me/guilds/${this.guildId}/member`,
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      );
+      if (this.guildId && this.adminRoleId) {
+        const memberResponse = await axios.get(
+          `${DISCORD_API}/users/@me/guilds/${this.guildId}/member`,
+          {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }
+        );
 
-      const roles = memberResponse.data.roles || [];
-      isAdmin = roles.includes(this.adminRoleId);
+        const roles = memberResponse.data.roles || [];
+        isAdmin = roles.includes(this.adminRoleId);
+      }
     } catch (error) {
       // User not in guild or bot not in server
       console.log('User not in guild or cannot verify roles');

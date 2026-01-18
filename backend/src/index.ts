@@ -28,9 +28,31 @@ app.use(session({
 }));
 
 // Auth routes
+app.get('/api/auth/status', (req, res) => {
+  const isConfigured = discordAuth.isConfigured();
+  
+  res.json({
+    configured: isConfigured,
+    message: isConfigured 
+      ? 'Discord OAuth configured' 
+      : 'Discord OAuth NOT configured - Please configure in backend/.env'
+  });
+});
+
 app.get('/api/auth/discord', (req, res) => {
-  const authUrl = discordAuth.getAuthUrl();
-  res.json({ url: authUrl });
+  if (!discordAuth.isConfigured()) {
+    return res.status(503).json({ 
+      error: 'Discord OAuth not configured',
+      message: 'Please configure Discord OAuth in backend/.env file. See SETUP.txt for instructions.'
+    });
+  }
+  
+  try {
+    const authUrl = discordAuth.getAuthUrl();
+    res.json({ url: authUrl });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to generate auth URL' });
+  }
 });
 
 app.get('/api/auth/discord/callback', async (req, res) => {
@@ -59,7 +81,7 @@ app.get('/api/auth/discord/callback', async (req, res) => {
 
 app.get('/api/auth/me', (req: AuthRequest, res) => {
   if (req.session?.user) {
-    res.json(req.session.user);
+    res.json({ user: req.session.user });
   } else {
     res.json({ user: null });
   }
