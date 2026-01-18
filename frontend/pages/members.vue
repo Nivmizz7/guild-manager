@@ -3,20 +3,21 @@
     <h1>👥 Gestion des membres</h1>
 
     <div class="wow-panel" style="margin-bottom: 2rem;">
-      <button @click="showAddForm = !showAddForm" class="wow-button">
-        {{ showAddForm ? 'Annuler' : '+ Ajouter un membre' }}
+      <button @click="toggleForm" class="wow-button">
+        {{ showForm ? 'Annuler' : '+ Ajouter un membre' }}
       </button>
 
-      <form v-if="showAddForm" @submit.prevent="addMember" style="margin-top: 2rem;">
+      <form v-if="showForm" @submit.prevent="saveMember" style="margin-top: 2rem;">
+        <h3>{{ editingMember ? 'Modifier le membre' : 'Ajouter un membre' }}</h3>
         <div class="form-grid">
           <div class="form-group">
             <label>Nom</label>
-            <input v-model="newMember.name" class="wow-input" required />
+            <input v-model="formData.name" class="wow-input" required />
           </div>
 
           <div class="form-group">
             <label>Classe</label>
-            <select v-model="newMember.class" class="wow-select" required>
+            <select v-model="formData.class" class="wow-select" required>
               <option value="Warrior">Guerrier</option>
               <option value="Paladin">Paladin</option>
               <option value="Hunter">Chasseur</option>
@@ -35,12 +36,12 @@
 
           <div class="form-group">
             <label>Race</label>
-            <input v-model="newMember.race" class="wow-input" required />
+            <input v-model="formData.race" class="wow-input" required />
           </div>
 
           <div class="form-group">
             <label>Rôle</label>
-            <select v-model="newMember.role" class="wow-select" required>
+            <select v-model="formData.role" class="wow-select" required>
               <option value="Tank">Tank</option>
               <option value="Heal">Heal</option>
               <option value="DPS">DPS</option>
@@ -49,16 +50,18 @@
 
           <div class="form-group">
             <label>Spécialisation</label>
-            <input v-model="newMember.specialization" class="wow-input" />
+            <input v-model="formData.specialization" class="wow-input" />
           </div>
 
           <div class="form-group">
             <label>Notes</label>
-            <textarea v-model="newMember.notes" class="wow-textarea" rows="3"></textarea>
+            <textarea v-model="formData.notes" class="wow-textarea" rows="3"></textarea>
           </div>
         </div>
 
-        <button type="submit" class="wow-button" style="margin-top: 1rem;">Ajouter</button>
+        <button type="submit" class="wow-button" style="margin-top: 1rem;">
+          {{ editingMember ? 'Modifier' : 'Ajouter' }}
+        </button>
       </form>
     </div>
 
@@ -83,8 +86,9 @@
           <div>{{ member.race }}</div>
           <div>{{ member.role }}</div>
           <div>{{ member.specialization || '-' }}</div>
-          <div>
-            <button @click="deleteMemberById(member.id)" class="delete-btn">🗑️</button>
+          <div class="actions">
+            <button @click="editMember(member)" class="edit-btn" title="Modifier">✏️</button>
+            <button @click="deleteMemberById(member.id)" class="delete-btn" title="Supprimer">🗑️</button>
           </div>
         </div>
       </div>
@@ -96,9 +100,10 @@
 const api = useApi();
 const config = useState('config');
 const members = ref<any[]>([]);
-const showAddForm = ref(false);
+const showForm = ref(false);
+const editingMember = ref<any>(null);
 
-const newMember = ref({
+const formData = ref({
   name: '',
   class: 'Warrior',
   race: '',
@@ -111,30 +116,53 @@ const newMember = ref({
 onMounted(async () => {
   await loadMembers();
   const configData = await api.getConfig();
-  newMember.value.faction = configData.faction;
+  formData.value.faction = configData.faction;
 });
 
 const loadMembers = async () => {
   members.value = await api.getMembers();
 };
 
-const addMember = async () => {
+const toggleForm = () => {
+  showForm.value = !showForm.value;
+  if (!showForm.value) {
+    editingMember.value = null;
+    resetForm();
+  }
+};
+
+const resetForm = () => {
+  formData.value = {
+    name: '',
+    class: 'Warrior',
+    race: '',
+    role: 'DPS',
+    faction: config.value.faction,
+    specialization: '',
+    notes: '',
+  };
+};
+
+const editMember = (member: any) => {
+  editingMember.value = member;
+  formData.value = { ...member };
+  showForm.value = true;
+};
+
+const saveMember = async () => {
   try {
-    await api.createMember(newMember.value);
+    if (editingMember.value) {
+      await api.updateMember(editingMember.value.id, formData.value);
+    } else {
+      await api.createMember(formData.value);
+    }
     await loadMembers();
-    showAddForm.value = false;
-    newMember.value = {
-      name: '',
-      class: 'Warrior',
-      race: '',
-      role: 'DPS',
-      faction: config.value.faction,
-      specialization: '',
-      notes: '',
-    };
+    showForm.value = false;
+    editingMember.value = null;
+    resetForm();
   } catch (error) {
-    console.error('Failed to add member:', error);
-    alert('Erreur lors de l\'ajout du membre');
+    console.error('Failed to save member:', error);
+    alert('Erreur lors de l\'enregistrement du membre');
   }
 };
 
@@ -192,6 +220,12 @@ label {
   background: rgba(212, 175, 55, 0.1);
 }
 
+.actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.edit-btn,
 .delete-btn {
   background: none;
   border: none;
@@ -200,6 +234,7 @@ label {
   transition: transform 0.2s;
 }
 
+.edit-btn:hover,
 .delete-btn:hover {
   transform: scale(1.2);
 }
