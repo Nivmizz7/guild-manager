@@ -15,21 +15,49 @@
           </div>
 
           <div class="form-group">
+            <label>Quantité</label>
+            <input v-model.number="newLoot.quantity" type="number" min="1" class="wow-input" required />
+          </div>
+
+          <div class="form-group">
             <label>Qualité</label>
             <select v-model="newLoot.quality" class="wow-select" required>
-              <option value="Poor">Pauvre</option>
-              <option value="Common">Commun</option>
-              <option value="Uncommon">Inhabituel</option>
+              <option value="Pauvre">Pauvre</option>
+              <option value="Commun">Commun</option>
+              <option value="Inhabituel">Inhabituel</option>
               <option value="Rare">Rare</option>
-              <option value="Epic">Épique</option>
-              <option value="Legendary">Légendaire</option>
+              <option value="Épique">Épique</option>
+              <option value="Légendaire">Légendaire</option>
             </select>
           </div>
 
           <div class="form-group">
-            <label>Raid</label>
-            <select v-model="newLoot.raidId" class="wow-select" required>
-              <option value="">Sélectionner un raid</option>
+            <label>Provenance</label>
+            <select v-model="newLoot.source" class="wow-select" required>
+              <option value="Raid">Raid</option>
+              <option value="Donjon">Donjon</option>
+              <option value="Farm">Farm</option>
+              <option value="Craft">Craft</option>
+              <option value="Achat">Achat</option>
+              <option value="Quête">Quête</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Localisation</label>
+            <select v-model="newLoot.location" class="wow-select" required>
+              <option value="Banque de guilde">Banque de guilde</option>
+              <option value="Coffre personnel">Coffre personnel</option>
+              <option value="Mule">Mule</option>
+              <option value="Inventaire">Inventaire</option>
+              <option value="Équipé">Équipé</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Raid (optionnel)</label>
+            <select v-model="newLoot.raidId" class="wow-select">
+              <option value="">Aucun</option>
               <option v-for="raid in raids" :key="raid.id" :value="raid.id">
                 {{ raid.name }} - {{ raid.instance }}
               </option>
@@ -37,8 +65,8 @@
           </div>
 
           <div class="form-group">
-            <label>Boss</label>
-            <input v-model="newLoot.boss" class="wow-input" required />
+            <label>Boss / Mob (optionnel)</label>
+            <input v-model="newLoot.boss" class="wow-input" />
           </div>
 
           <div class="form-group">
@@ -57,25 +85,40 @@
     </div>
 
     <div class="wow-panel">
-      <div v-if="loot.length === 0" style="text-align: center; padding: 2rem;">
-        <p>Aucun loot enregistré</p>
+      <div class="search-bar">
+        <input 
+          v-model="searchQuery" 
+          type="text" 
+          class="wow-input" 
+          placeholder="🔍 Rechercher un objet, membre, boss, raid..."
+        />
+      </div>
+
+      <div v-if="filteredLoot.length === 0" style="text-align: center; padding: 2rem;">
+        <p>{{ searchQuery ? 'Aucun résultat trouvé' : 'Aucun loot enregistré' }}</p>
       </div>
 
       <div v-else class="loot-table">
         <div class="table-header">
           <div>Objet</div>
+          <div>Qté</div>
           <div>Qualité</div>
+          <div>Provenance</div>
+          <div>Localisation</div>
           <div>Boss</div>
           <div>Raid</div>
           <div>Attribué à</div>
           <div>Date</div>
         </div>
 
-        <div v-for="item in sortedLoot" :key="item.id" class="table-row">
+        <div v-for="item in filteredLoot" :key="item.id" class="table-row">
           <div :class="'quality-' + item.quality">{{ item.itemName }}</div>
+          <div>{{ item.quantity || 1 }}</div>
           <div :class="'quality-' + item.quality">{{ item.quality }}</div>
-          <div>{{ item.boss }}</div>
-          <div>{{ getRaidName(item.raidId) }}</div>
+          <div>{{ item.source || '-' }}</div>
+          <div>{{ item.location || '-' }}</div>
+          <div>{{ item.boss || '-' }}</div>
+          <div>{{ item.raidId ? getRaidName(item.raidId) : '-' }}</div>
           <div :class="getMemberClass(item.assignedTo)">{{ getMemberName(item.assignedTo) }}</div>
           <div>{{ formatDate(item.date) }}</div>
         </div>
@@ -100,10 +143,14 @@ const loot = ref<any[]>([]);
 const members = ref<any[]>([]);
 const raids = ref<any[]>([]);
 const showAddForm = ref(false);
+const searchQuery = ref('');
 
 const newLoot = ref({
   itemName: '',
+  quantity: 1,
   quality: 'Rare' as const,
+  source: 'Raid' as const,
+  location: 'Banque de guilde' as const,
   raidId: '',
   boss: '',
   assignedTo: '',
@@ -113,6 +160,29 @@ const sortedLoot = computed(() => {
   return [...loot.value].sort((a, b) => 
     new Date(b.date).getTime() - new Date(a.date).getTime()
   );
+});
+
+const filteredLoot = computed(() => {
+  if (!searchQuery.value.trim()) {
+    return sortedLoot.value;
+  }
+  
+  const query = searchQuery.value.toLowerCase();
+  return sortedLoot.value.filter(item => {
+    const memberName = getMemberName(item.assignedTo).toLowerCase();
+    const raidName = item.raidId ? getRaidName(item.raidId).toLowerCase() : '';
+    const boss = (item.boss || '').toLowerCase();
+    const itemName = item.itemName.toLowerCase();
+    const source = (item.source || '').toLowerCase();
+    const location = (item.location || '').toLowerCase();
+    
+    return itemName.includes(query) || 
+           memberName.includes(query) || 
+           raidName.includes(query) || 
+           boss.includes(query) ||
+           source.includes(query) ||
+           location.includes(query);
+  });
 });
 
 const memberLootCounts = computed(() => {
@@ -150,7 +220,10 @@ const addLoot = async () => {
     showAddForm.value = false;
     newLoot.value = {
       itemName: '',
+      quantity: 1,
       quality: 'Rare',
+      source: 'Raid',
+      location: 'Banque de guilde',
       raidId: '',
       boss: '',
       assignedTo: '',
@@ -199,23 +272,36 @@ label {
   color: var(--secondary);
 }
 
+.search-bar {
+  margin-bottom: 1.5rem;
+}
+
+.search-bar input {
+  width: 100%;
+  font-size: 1.1rem;
+}
+
 .loot-table {
   width: 100%;
+  overflow-x: auto;
 }
 
 .table-header,
 .table-row {
   display: grid;
-  grid-template-columns: 2fr 1fr 1.5fr 1.5fr 1.5fr 1fr;
-  gap: 1rem;
-  padding: 1rem;
+  grid-template-columns: 2fr 0.5fr 1fr 1.2fr 1.5fr 1.2fr 1.2fr 1.5fr 1fr;
+  gap: 0.5rem;
+  padding: 0.75rem;
   border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+  font-size: 0.9rem;
 }
 
 .table-header {
   font-weight: bold;
   color: var(--secondary);
   background: rgba(0, 0, 0, 0.3);
+  position: sticky;
+  top: 0;
 }
 
 .table-row:hover {
