@@ -105,6 +105,8 @@
 <script setup lang="ts">
 import { RAIDS_BY_VERSION } from '~/data/raids';
 
+const { t } = useI18n();
+const { isAdmin } = useAuth();
 const api = useApi();
 const config = useState('config');
 const raids = ref<any[]>([]);

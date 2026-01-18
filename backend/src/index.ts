@@ -74,6 +74,7 @@ app.get('/api/auth/discord/callback', async (req, res) => {
   const code = req.query.code as string;
   
   if (!code) {
+    console.error('[Auth Callback] No code provided');
     return res.redirect(`${process.env.FRONTEND_URL}?error=no_code`);
   }
 
@@ -81,15 +82,27 @@ app.get('/api/auth/discord/callback', async (req, res) => {
     const accessToken = await discordAuth.exchangeCode(code);
     const user = await discordAuth.getUser(accessToken);
     
+    console.log('[Auth Callback] User authenticated:', user);
+    
     req.session.user = {
       id: user.id,
       username: user.username,
       isAdmin: user.isAdmin,
     };
+    
+    await new Promise<void>((resolve, reject) => {
+      req.session.save((err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
+    
+    console.log('[Auth Callback] Session saved:', req.session.user);
+    await logAction(user.username, 'LOGIN', `Connexion de ${user.username}${user.isAdmin ? ' (Admin)' : ''}`);
 
     res.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');
   } catch (error) {
-    console.error('Discord auth error:', error);
+    console.error('[Auth Callback] Discord auth error:', error);
     res.redirect(`${process.env.FRONTEND_URL}?error=auth_failed`);
   }
 });

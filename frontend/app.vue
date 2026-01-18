@@ -38,17 +38,21 @@ const route = useRoute();
 const theme = computed(() => config.value.faction === 'Horde' ? 'horde' : 'alliance');
 const guildName = computed(() => config.value.name);
 
-onMounted(async () => {
-  // Only fetch user if not on login page
-  if (route.path !== '/login') {
-    await fetchUser();
-  }
-});
+// Don't fetch user here, let middleware handle it
 
 const handleLogout = async () => {
   await logout();
   navigateTo('/login');
 };
+
+// Debug logs
+watch(isLoggedIn, (newVal) => {
+  console.log('[App.vue] isLoggedIn changed to:', newVal);
+});
+
+watch(user, (newVal) => {
+  console.log('[App.vue] user changed to:', newVal);
+});
 </script>
 
 <style scoped>
@@ -72,7 +76,8 @@ const handleLogout = async () => {
 
 .nav-links {
   display: flex;
-  gap: 2rem;
+  gap: 1rem;
+  align-items: center;
 }
 
 .nav-links a {
@@ -84,6 +89,7 @@ const handleLogout = async () => {
   border: 2px solid transparent;
   border-radius: 4px;
   transition: all 0.3s ease;
+  font-size: 0.9rem;
 }
 
 .nav-links a:hover,
@@ -100,19 +106,18 @@ const handleLogout = async () => {
   border-radius: 4px;
   cursor: pointer;
   font-weight: bold;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   transition: all 0.3s ease;
 }
 
 .lang-toggle:hover {
   background: rgba(212, 175, 55, 0.3);
-  transform: scale(1.05);
 }
 
 .user-menu {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.75rem;
   padding: 0.5rem 1rem;
   background: rgba(0, 0, 0, 0.3);
   border-radius: 4px;
@@ -122,42 +127,45 @@ const handleLogout = async () => {
 .username {
   color: var(--text-light);
   font-weight: bold;
+  font-size: 0.95rem;
 }
 
 .admin-badge {
   font-size: 1.2rem;
 }
 
-.logout-btn,
-.login-btn {
-  background: rgba(88, 101, 242, 0.8);
-  border: 2px solid #5865F2;
+.logout-btn {
+  background: rgba(220, 20, 60, 0.3);
+  border: 2px solid #DC143C;
   color: white;
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.8rem;
   border-radius: 4px;
   cursor: pointer;
   font-weight: bold;
-  font-size: 0.9rem;
+  font-size: 1rem;
   transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
-.logout-btn {
-  background: rgba(212, 175, 55, 0.2);
-  border-color: var(--secondary);
-  padding: 0.3rem 0.6rem;
-  font-size: 1.2rem;
-}
-
-.login-btn:hover,
 .logout-btn:hover {
+  background: rgba(220, 20, 60, 0.5);
   transform: scale(1.05);
-  background: rgba(88, 101, 242, 1);
 }
 
-.logout-btn:hover {
-  background: rgba(212, 175, 55, 0.4);
+@media (max-width: 768px) {
+  .nav-content {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .nav-links {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  
+  .nav-links a {
+    font-size: 0.8rem;
+    padding: 0.4rem 0.8rem;
+  }
 }
 </style>

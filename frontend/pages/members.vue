@@ -101,6 +101,8 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n();
+const { isAdmin } = useAuth();
 const api = useApi();
 const config = useState('config');
 const members = ref<any[]>([]);
