@@ -18,19 +18,19 @@
           <div class="form-group">
             <label>Classe</label>
             <select v-model="formData.class" class="wow-select" required>
-              <option value="Warrior">Guerrier</option>
+              <option value="Guerrier">Guerrier</option>
               <option value="Paladin">Paladin</option>
-              <option value="Hunter">Chasseur</option>
-              <option value="Rogue">Voleur</option>
-              <option value="Priest">Prêtre</option>
-              <option value="Death Knight">Chevalier de la mort</option>
-              <option value="Shaman">Chaman</option>
+              <option value="Chasseur">Chasseur</option>
+              <option value="Voleur">Voleur</option>
+              <option value="Prêtre">Prêtre</option>
+              <option value="Chevalier de la mort">Chevalier de la mort</option>
+              <option value="Chaman">Chaman</option>
               <option value="Mage">Mage</option>
-              <option value="Warlock">Démoniste</option>
-              <option value="Monk">Moine</option>
-              <option value="Druid">Druide</option>
-              <option value="Demon Hunter">Chasseur de démons</option>
-              <option value="Evoker">Évocateur</option>
+              <option value="Démoniste">Démoniste</option>
+              <option value="Moine">Moine</option>
+              <option value="Druide">Druide</option>
+              <option value="Chasseur de démons">Chasseur de démons</option>
+              <option value="Évocateur">Évocateur</option>
             </select>
           </div>
 
@@ -105,7 +105,7 @@ const editingMember = ref<any>(null);
 
 const formData = ref({
   name: '',
-  class: 'Warrior',
+  class: 'Guerrier',
   race: '',
   role: 'DPS',
   faction: 'Horde',
@@ -134,7 +134,7 @@ const toggleForm = () => {
 const resetForm = () => {
   formData.value = {
     name: '',
-    class: 'Warrior',
+    class: 'Guerrier',
     race: '',
     role: 'DPS',
     faction: config.value.faction,

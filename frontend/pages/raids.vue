@@ -16,7 +16,9 @@
 
           <div class="form-group">
             <label>Instance</label>
-            <input v-model="newRaid.instance" class="wow-input" required placeholder="ex: Molten Core" />
+            <select v-model="newRaid.instance" class="wow-select" required>
+              <option v-for="raid in availableRaids" :key="raid" :value="raid">{{ raid }}</option>
+            </select>
           </div>
 
           <div class="form-group">
@@ -97,6 +99,8 @@
 </template>
 
 <script setup lang="ts">
+import { RAIDS_BY_VERSION } from '~/data/raids';
+
 const api = useApi();
 const config = useState('config');
 const raids = ref<any[]>([]);
@@ -112,10 +116,17 @@ const newRaid = ref({
   status: 'prévu' as const,
 });
 
+const availableRaids = computed(() => {
+  return RAIDS_BY_VERSION[newRaid.value.version] || [];
+});
+
 onMounted(async () => {
   await loadRaids();
   const configData = await api.getConfig();
   newRaid.value.version = configData.version;
+  if (availableRaids.value.length > 0) {
+    newRaid.value.instance = availableRaids.value[0];
+  }
 });
 
 const loadRaids = async () => {
@@ -130,7 +141,7 @@ const addRaid = async () => {
     showAddForm.value = false;
     newRaid.value = {
       name: '',
-      instance: '',
+      instance: availableRaids.value[0] || '',
       date: '',
       time: '',
       version: config.value.version,
