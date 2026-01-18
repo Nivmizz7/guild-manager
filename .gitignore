@@ -37,3 +37,7 @@ logs/
 # Temporary files
 *.tmp
 .cache/
+
+#env
+backend/.env
+frontend/.env

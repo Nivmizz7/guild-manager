@@ -5,6 +5,7 @@ export const useApi = () => {
   const fetchApi = async (endpoint: string, options: RequestInit = {}) => {
     const response = await fetch(`${baseUrl}${endpoint}`, {
       ...options,
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
@@ -19,6 +20,11 @@ export const useApi = () => {
   };
 
   return {
+    // Auth
+    getAuthUrl: () => fetchApi('/api/auth/discord'),
+    getMe: () => fetchApi('/api/auth/me'),
+    logout: () => fetchApi('/api/auth/logout', { method: 'POST' }),
+
     // Config
     getConfig: () => fetchApi('/api/config'),
     saveConfig: (data: any) => fetchApi('/api/config', {

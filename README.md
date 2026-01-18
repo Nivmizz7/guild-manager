@@ -1,6 +1,6 @@
 # WoW Guild Manager
 
-Self-hosted web application for World of Warcraft guild management.
+Self-hosted web application for World of Warcraft guild management with Discord OAuth integration.
 
 ## Description
 
@@ -14,6 +14,9 @@ Features:
 - WoW themed interface (Horde/Alliance)
 - Support for all versions (Vanilla to The War Within)
 - Multi-language support (FR/EN)
+- **Discord OAuth authentication** with role-based permissions
+  - Read-only mode for regular users
+  - Full edit mode for users with admin role
 
 ## Installation
 
@@ -22,6 +25,22 @@ npm install
 ```
 
 This command automatically installs all dependencies (backend and frontend).
+
+## Configuration
+
+### Discord OAuth Setup (Required for auth)
+
+See **SETUP.txt** for detailed instructions on configuring Discord OAuth.
+
+1. Create a Discord application
+2. Get your Client ID and Secret
+3. Configure the backend `.env` file:
+
+```bash
+cd backend
+cp .env.example .env
+# Edit .env with your Discord credentials
+```
 
 ## Starting
 
@@ -37,6 +56,12 @@ On first launch, a setup wizard will guide you to:
 - Define the guild name
 - Choose the faction (Horde/Alliance)
 - Select the game version
+
+## Permission System
+
+- **Not logged in**: Read-only access
+- **Discord login without admin role**: Read-only access
+- **Discord login with admin role**: Full access (create, edit, delete)
 
 ## Architecture
 
@@ -65,6 +90,8 @@ Each folder copy represents an independent guild:
 ```bash
 cp -r wow-guild-manager/ my-guild/
 cd my-guild/
+npm install
+# Configure Discord OAuth in backend/.env
 npm start
 ```
 
@@ -72,35 +99,41 @@ npm start
 
 The backend exposes a complete REST API on port 3001:
 
+**Authentication**
+- GET /api/auth/discord - Get Discord OAuth URL
+- GET /api/auth/discord/callback - OAuth callback
+- GET /api/auth/me - Get current user
+- POST /api/auth/logout - Logout
+
 **Configuration**
-- GET /api/config
-- POST /api/config
+- GET /api/config (public)
+- POST /api/config (admin only)
 
 **Guild**
-- GET /api/guild
-- PUT /api/guild
+- GET /api/guild (public)
+- PUT /api/guild (admin only)
 
 **Members**
-- GET /api/members
-- POST /api/members
-- PUT /api/members/:id
-- DELETE /api/members/:id
+- GET /api/members (public)
+- POST /api/members (admin only)
+- PUT /api/members/:id (admin only)
+- DELETE /api/members/:id (admin only)
 
 **Calendar**
-- GET /api/calendar
-- POST /api/calendar
-- DELETE /api/calendar/:id
+- GET /api/calendar (public)
+- POST /api/calendar (admin only)
+- DELETE /api/calendar/:id (admin only)
 
 **Raids**
-- GET /api/raids
-- POST /api/raids
-- PUT /api/raids/:id
-- DELETE /api/raids/:id
+- GET /api/raids (public)
+- POST /api/raids (admin only)
+- PUT /api/raids/:id (admin only)
+- DELETE /api/raids/:id (admin only)
 
 **Loot**
-- GET /api/loot
-- GET /api/loot/member/:memberId
-- POST /api/loot
+- GET /api/loot (public)
+- GET /api/loot/member/:memberId (public)
+- POST /api/loot (admin only)
 
 ## Available Commands
 
@@ -113,15 +146,17 @@ npm run clean  # Clean builds and data
 
 ## Technologies
 
-- Backend: Node.js, Express, TypeScript
+- Backend: Node.js, Express, TypeScript, Discord OAuth2
 - Frontend: Nuxt 3, Vue 3, TypeScript
 - Storage: JSON files (fs)
+- Authentication: Discord OAuth with session management
 - No Docker, no database
 
 ## Requirements
 
 - Node.js 18 or higher
 - NPM 9 or higher
+- Discord application (for OAuth)
 
 ## License
 

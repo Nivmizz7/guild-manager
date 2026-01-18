@@ -1,21 +1,86 @@
 import express from 'express';
 import cors from 'cors';
+import session from 'express-session';
+import 'dotenv/config';
 import { storage } from './storage';
+import { DiscordAuth } from './discord';
+import { requireAdmin, AuthRequest } from './middleware';
 import type { GuildConfig, Member, CalendarEvent, Raid, Dungeon, Loot } from './types';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const discordAuth = new DiscordAuth();
 
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
+}));
 app.use(express.json());
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'change-this-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  }
+}));
 
-// Config / Setup
+// Auth routes
+app.get('/api/auth/discord', (req, res) => {
+  const authUrl = discordAuth.getAuthUrl();
+  res.json({ url: authUrl });
+});
+
+app.get('/api/auth/discord/callback', async (req, res) => {
+  const code = req.query.code as string;
+  
+  if (!code) {
+    return res.redirect(`${process.env.FRONTEND_URL}?error=no_code`);
+  }
+
+  try {
+    const accessToken = await discordAuth.exchangeCode(code);
+    const user = await discordAuth.getUser(accessToken);
+    
+    req.session.user = {
+      id: user.id,
+      username: user.username,
+      isAdmin: user.isAdmin,
+    };
+
+    res.redirect(process.env.FRONTEND_URL || 'http://localhost:3000');
+  } catch (error) {
+    console.error('Discord auth error:', error);
+    res.redirect(`${process.env.FRONTEND_URL}?error=auth_failed`);
+  }
+});
+
+app.get('/api/auth/me', (req: AuthRequest, res) => {
+  if (req.session?.user) {
+    res.json(req.session.user);
+  } else {
+    res.json({ user: null });
+  }
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ error: 'Logout failed' });
+    }
+    res.json({ success: true });
+  });
+});
+
+// Config / Setup (read-only)
 app.get('/api/config', async (req, res) => {
   const config = await storage.config.read();
   res.json(config);
 });
 
-app.post('/api/config', async (req, res) => {
+app.post('/api/config', requireAdmin, async (req: AuthRequest, res) => {
   const config: GuildConfig = { ...req.body, setupComplete: true };
   await storage.config.write(config);
   
@@ -33,7 +98,7 @@ app.post('/api/config', async (req, res) => {
   res.json(config);
 });
 
-// Guild
+// Guild (read-only for non-admin)
 app.get('/api/guild', async (req, res) => {
   const guild = await storage.guild.read();
   const members = await storage.members.read();
@@ -54,7 +119,7 @@ app.get('/api/guild', async (req, res) => {
   });
 });
 
-app.put('/api/guild', async (req, res) => {
+app.put('/api/guild', requireAdmin, async (req: AuthRequest, res) => {
   const currentGuild = await storage.guild.read();
   const updated = { ...currentGuild, ...req.body };
   await storage.guild.write(updated);
@@ -67,7 +132,7 @@ app.get('/api/members', async (req, res) => {
   res.json(members);
 });
 
-app.post('/api/members', async (req, res) => {
+app.post('/api/members', requireAdmin, async (req: AuthRequest, res) => {
   const members = await storage.members.read();
   const newMember: Member = {
     id: Date.now().toString(),
@@ -78,7 +143,7 @@ app.post('/api/members', async (req, res) => {
   res.json(newMember);
 });
 
-app.put('/api/members/:id', async (req, res) => {
+app.put('/api/members/:id', requireAdmin, async (req: AuthRequest, res) => {
   const members = await storage.members.read();
   const index = members.findIndex(m => m.id === req.params.id);
   if (index === -1) return res.status(404).json({ error: 'Member not found' });
@@ -88,7 +153,7 @@ app.put('/api/members/:id', async (req, res) => {
   res.json(members[index]);
 });
 
-app.delete('/api/members/:id', async (req, res) => {
+app.delete('/api/members/:id', requireAdmin, async (req: AuthRequest, res) => {
   const members = await storage.members.read();
   const filtered = members.filter(m => m.id !== req.params.id);
   await storage.members.write(filtered);
@@ -101,7 +166,7 @@ app.get('/api/calendar', async (req, res) => {
   res.json(events);
 });
 
-app.post('/api/calendar', async (req, res) => {
+app.post('/api/calendar', requireAdmin, async (req: AuthRequest, res) => {
   const events = await storage.calendar.read();
   const newEvent: CalendarEvent = {
     id: Date.now().toString(),
@@ -112,7 +177,7 @@ app.post('/api/calendar', async (req, res) => {
   res.json(newEvent);
 });
 
-app.delete('/api/calendar/:id', async (req, res) => {
+app.delete('/api/calendar/:id', requireAdmin, async (req: AuthRequest, res) => {
   const events = await storage.calendar.read();
   const filtered = events.filter(e => e.id !== req.params.id);
   await storage.calendar.write(filtered);
@@ -125,7 +190,7 @@ app.get('/api/raids', async (req, res) => {
   res.json(raids);
 });
 
-app.post('/api/raids', async (req, res) => {
+app.post('/api/raids', requireAdmin, async (req: AuthRequest, res) => {
   const raids = await storage.raids.read();
   const calendar = await storage.calendar.read();
   
@@ -154,7 +219,7 @@ app.post('/api/raids', async (req, res) => {
   res.json(newRaid);
 });
 
-app.put('/api/raids/:id', async (req, res) => {
+app.put('/api/raids/:id', requireAdmin, async (req: AuthRequest, res) => {
   const raids = await storage.raids.read();
   const index = raids.findIndex(r => r.id === req.params.id);
   if (index === -1) return res.status(404).json({ error: 'Raid not found' });
@@ -164,7 +229,7 @@ app.put('/api/raids/:id', async (req, res) => {
   res.json(raids[index]);
 });
 
-app.delete('/api/raids/:id', async (req, res) => {
+app.delete('/api/raids/:id', requireAdmin, async (req: AuthRequest, res) => {
   const raids = await storage.raids.read();
   const calendar = await storage.calendar.read();
   
@@ -182,7 +247,7 @@ app.get('/api/dungeons', async (req, res) => {
   res.json(dungeons);
 });
 
-app.post('/api/dungeons', async (req, res) => {
+app.post('/api/dungeons', requireAdmin, async (req: AuthRequest, res) => {
   const dungeons = await storage.dungeons.read();
   const calendar = await storage.calendar.read();
   
@@ -220,7 +285,7 @@ app.get('/api/loot/member/:memberId', async (req, res) => {
   res.json(memberLoot);
 });
 
-app.post('/api/loot', async (req, res) => {
+app.post('/api/loot', requireAdmin, async (req: AuthRequest, res) => {
   const loot = await storage.loot.read();
   const newLoot: Loot = {
     id: Date.now().toString(),

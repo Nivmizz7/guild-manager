@@ -87,8 +87,8 @@
           <div>{{ member.role }}</div>
           <div>{{ member.specialization || '-' }}</div>
           <div class="actions">
-            <button @click="editMember(member)" class="edit-btn" title="Modifier">✏️</button>
-            <button @click="deleteMemberById(member.id)" class="delete-btn" title="Supprimer">🗑️</button>
+            <button v-if="isAdmin" @click="editMember(member)" class="edit-btn" title="Modifier">✏️</button>
+            <button v-if="isAdmin" @click="deleteMemberById(member.id)" class="delete-btn" title="Supprimer">🗑️</button>
           </div>
         </div>
       </div>
@@ -237,5 +237,14 @@ label {
 .edit-btn:hover,
 .delete-btn:hover {
   transform: scale(1.2);
+}
+
+.read-only-notice {
+  background: rgba(255, 165, 0, 0.2);
+  border: 2px solid orange;
+  padding: 1rem;
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 1rem;
 }
 </style>
