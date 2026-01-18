@@ -43,6 +43,16 @@
             </select>
           </div>
 
+          <div v-if="newLoot.source === 'Raid' || newLoot.source === 'Donjon'" class="form-group">
+            <label>{{ newLoot.source === 'Raid' ? 'Raid' : 'Donjon' }}</label>
+            <input v-model="newLoot.instance" class="wow-input" :placeholder="newLoot.source === 'Raid' ? 'ex: Cœur du Magma' : 'ex: Stratholme'" required />
+          </div>
+
+          <div v-if="newLoot.source === 'Raid' || newLoot.source === 'Donjon'" class="form-group">
+            <label>Boss / Mob</label>
+            <input v-model="newLoot.boss" class="wow-input" />
+          </div>
+
           <div class="form-group">
             <label>Localisation</label>
             <select v-model="newLoot.location" class="wow-select" required>
@@ -51,31 +61,6 @@
               <option value="Mule">Mule</option>
               <option value="Inventaire">Inventaire</option>
               <option value="Équipé">Équipé</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Raid (optionnel)</label>
-            <select v-model="newLoot.raidId" class="wow-select">
-              <option value="">Aucun</option>
-              <option v-for="raid in raids" :key="raid.id" :value="raid.id">
-                {{ raid.name }} - {{ raid.instance }}
-              </option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Boss / Mob (optionnel)</label>
-            <input v-model="newLoot.boss" class="wow-input" />
-          </div>
-
-          <div class="form-group">
-            <label>Attribué à</label>
-            <select v-model="newLoot.assignedTo" class="wow-select" required>
-              <option value="">Sélectionner un membre</option>
-              <option v-for="member in members" :key="member.id" :value="member.id">
-                {{ member.name }} ({{ member.class }})
-              </option>
             </select>
           </div>
         </div>
@@ -104,10 +89,9 @@
           <div>Qté</div>
           <div>Qualité</div>
           <div>Provenance</div>
-          <div>Localisation</div>
+          <div>Raid/Donjon</div>
           <div>Boss</div>
-          <div>Raid</div>
-          <div>Attribué à</div>
+          <div>Localisation</div>
           <div>Date</div>
         </div>
 
@@ -116,19 +100,18 @@
           <div>{{ item.quantity || 1 }}</div>
           <div :class="'quality-' + item.quality">{{ item.quality }}</div>
           <div>{{ item.source || '-' }}</div>
-          <div>{{ item.location || '-' }}</div>
+          <div>{{ item.instance || '-' }}</div>
           <div>{{ item.boss || '-' }}</div>
-          <div>{{ item.raidId ? getRaidName(item.raidId) : '-' }}</div>
-          <div :class="getMemberClass(item.assignedTo)">{{ getMemberName(item.assignedTo) }}</div>
+          <div>{{ item.location || '-' }}</div>
           <div>{{ formatDate(item.date) }}</div>
         </div>
       </div>
 
       <div v-if="loot.length > 0" style="margin-top: 2rem;">
-        <h2>Statistiques par membre</h2>
+        <h2>Résumé par provenance</h2>
         <div class="stats-grid">
-          <div v-for="(count, memberId) in memberLootCounts" :key="memberId" class="stat-item">
-            <span :class="getMemberClass(memberId)">{{ getMemberName(memberId) }}</span>
+          <div v-for="(count, source) in sourceCounts" :key="source" class="stat-item">
+            <span>{{ source }}</span>
             <span class="count">{{ count }}</span>
           </div>
         </div>
@@ -140,8 +123,6 @@
 <script setup lang="ts">
 const api = useApi();
 const loot = ref<any[]>([]);
-const members = ref<any[]>([]);
-const raids = ref<any[]>([]);
 const showAddForm = ref(false);
 const searchQuery = ref('');
 
@@ -150,10 +131,9 @@ const newLoot = ref({
   quantity: 1,
   quality: 'Rare' as const,
   source: 'Raid' as const,
+  instance: '',
   location: 'Banque de guilde' as const,
-  raidId: '',
   boss: '',
-  assignedTo: '',
 });
 
 const sortedLoot = computed(() => {
@@ -169,53 +149,47 @@ const filteredLoot = computed(() => {
   
   const query = searchQuery.value.toLowerCase();
   return sortedLoot.value.filter(item => {
-    const memberName = getMemberName(item.assignedTo).toLowerCase();
-    const raidName = item.raidId ? getRaidName(item.raidId).toLowerCase() : '';
     const boss = (item.boss || '').toLowerCase();
     const itemName = item.itemName.toLowerCase();
     const source = (item.source || '').toLowerCase();
     const location = (item.location || '').toLowerCase();
+    const instance = (item.instance || '').toLowerCase();
     
     return itemName.includes(query) || 
-           memberName.includes(query) || 
-           raidName.includes(query) || 
            boss.includes(query) ||
            source.includes(query) ||
-           location.includes(query);
+           location.includes(query) ||
+           instance.includes(query);
   });
 });
 
-const memberLootCounts = computed(() => {
+const sourceCounts = computed(() => {
   const counts: Record<string, number> = {};
   loot.value.forEach(item => {
-    counts[item.assignedTo] = (counts[item.assignedTo] || 0) + 1;
+    const source = item.source || 'Autre';
+    counts[source] = (counts[source] || 0) + 1;
   });
   return counts;
 });
 
 onMounted(async () => {
-  await Promise.all([
-    loadLoot(),
-    loadMembers(),
-    loadRaids(),
-  ]);
+  await loadLoot();
 });
 
 const loadLoot = async () => {
   loot.value = await api.getLoot();
 };
 
-const loadMembers = async () => {
-  members.value = await api.getMembers();
-};
-
-const loadRaids = async () => {
-  raids.value = await api.getRaids();
-};
-
 const addLoot = async () => {
   try {
-    await api.createLoot(newLoot.value);
+    // Si la provenance n'est pas Raid ou Donjon, on vide instance et boss
+    const lootData = { ...newLoot.value };
+    if (lootData.source !== 'Raid' && lootData.source !== 'Donjon') {
+      lootData.instance = '';
+      lootData.boss = '';
+    }
+    
+    await api.createLoot(lootData);
     await loadLoot();
     showAddForm.value = false;
     newLoot.value = {
@@ -223,30 +197,14 @@ const addLoot = async () => {
       quantity: 1,
       quality: 'Rare',
       source: 'Raid',
+      instance: '',
       location: 'Banque de guilde',
-      raidId: '',
       boss: '',
-      assignedTo: '',
     };
   } catch (error) {
     console.error('Failed to add loot:', error);
     alert('Erreur lors de l\'ajout du loot');
   }
-};
-
-const getMemberName = (memberId: string) => {
-  const member = members.value.find(m => m.id === memberId);
-  return member?.name || 'Inconnu';
-};
-
-const getMemberClass = (memberId: string) => {
-  const member = members.value.find(m => m.id === memberId);
-  return member ? 'class-' + member.class.replace(' ', '-') : '';
-};
-
-const getRaidName = (raidId: string) => {
-  const raid = raids.value.find(r => r.id === raidId);
-  return raid?.name || 'Inconnu';
 };
 
 const formatDate = (dateStr: string) => {
@@ -289,7 +247,7 @@ label {
 .table-header,
 .table-row {
   display: grid;
-  grid-template-columns: 2fr 0.5fr 1fr 1.2fr 1.5fr 1.2fr 1.2fr 1.5fr 1fr;
+  grid-template-columns: 2fr 0.5fr 1fr 1.2fr 1.5fr 1.2fr 1.5fr 1fr;
   gap: 0.5rem;
   padding: 0.75rem;
   border-bottom: 1px solid rgba(212, 175, 55, 0.3);
