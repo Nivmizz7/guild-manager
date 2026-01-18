@@ -16,7 +16,7 @@
     </nav>
     
     <main>
-      <slot />
+      <NuxtPage />
     </main>
   </div>
 </template>
