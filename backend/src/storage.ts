@@ -1,6 +1,6 @@
 import fs from 'fs/promises';
 import path from 'path';
-import type { GuildConfig, Member, CalendarEvent, Raid, Dungeon, Loot, GuildInfo } from './types';
+import type { GuildConfig, Member, CalendarEvent, Raid, Dungeon, Loot, Log, GuildInfo } from './types';
 
 const DATA_DIR = path.join(__dirname, '../../data');
 
@@ -76,5 +76,10 @@ export const storage = {
   loot: {
     read: () => readJSON<Loot[]>('loot.json', []),
     write: (data: Loot[]) => writeJSON('loot.json', data)
+  },
+
+  logs: {
+    read: () => readJSON<Log[]>('logs.json', []),
+    write: (data: Log[]) => writeJSON('logs.json', data)
   }
 };

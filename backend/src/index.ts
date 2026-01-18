@@ -5,11 +5,26 @@ import 'dotenv/config';
 import { storage } from './storage';
 import { DiscordAuth } from './discord';
 import { requireAdmin, AuthRequest } from './middleware';
-import type { GuildConfig, Member, CalendarEvent, Raid, Dungeon, Loot } from './types';
+import type { GuildConfig, Member, CalendarEvent, Raid, Dungeon, Loot, Log } from './types';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 const discordAuth = new DiscordAuth();
+
+// Helper function to log actions
+const logAction = async (username: string, action: string, description: string, details: any = {}) => {
+  const logs = await storage.logs.read();
+  const log: Log = {
+    id: Date.now().toString(),
+    timestamp: new Date().toISOString(),
+    username,
+    action,
+    description,
+    details
+  };
+  logs.push(log);
+  await storage.logs.write(logs);
+};
 
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
@@ -88,6 +103,8 @@ app.get('/api/auth/me', (req: AuthRequest, res) => {
 });
 
 app.post('/api/auth/logout', (req, res) => {
+  const username = req.session.user?.username || 'Utilisateur inconnu';
+  logAction(username, 'LOGOUT', `Déconnexion de ${username}`).catch(console.error);
   req.session.destroy((err) => {
     if (err) {
       return res.status(500).json({ error: 'Logout failed' });
@@ -162,6 +179,7 @@ app.post('/api/members', requireAdmin, async (req: AuthRequest, res) => {
   };
   members.push(newMember);
   await storage.members.write(members);
+  await logAction(req.session.user?.username || 'Système', 'MEMBER_CREATED', `Membre ajouté: ${newMember.name}`, newMember);
   res.json(newMember);
 });
 
@@ -170,15 +188,21 @@ app.put('/api/members/:id', requireAdmin, async (req: AuthRequest, res) => {
   const index = members.findIndex(m => m.id === req.params.id);
   if (index === -1) return res.status(404).json({ error: 'Member not found' });
   
+  const oldMember = members[index];
   members[index] = { ...members[index], ...req.body, id: req.params.id };
   await storage.members.write(members);
+  await logAction(req.session.user?.username || 'Système', 'MEMBER_UPDATED', `Membre modifié: ${members[index].name}`, { old: oldMember, new: members[index] });
   res.json(members[index]);
 });
 
 app.delete('/api/members/:id', requireAdmin, async (req: AuthRequest, res) => {
   const members = await storage.members.read();
+  const memberToDelete = members.find(m => m.id === req.params.id);
   const filtered = members.filter(m => m.id !== req.params.id);
   await storage.members.write(filtered);
+  if (memberToDelete) {
+    await logAction(req.session.user?.username || 'Système', 'MEMBER_DELETED', `Membre supprimé: ${memberToDelete.name}`, memberToDelete);
+  }
   res.json({ success: true });
 });
 
@@ -196,13 +220,18 @@ app.post('/api/calendar', requireAdmin, async (req: AuthRequest, res) => {
   };
   events.push(newEvent);
   await storage.calendar.write(events);
+  await logAction(req.session.user?.username || 'Système', 'EVENT_CREATED', `Événement créé: ${newEvent.title}`, newEvent);
   res.json(newEvent);
 });
 
 app.delete('/api/calendar/:id', requireAdmin, async (req: AuthRequest, res) => {
   const events = await storage.calendar.read();
+  const eventToDelete = events.find(e => e.id === req.params.id);
   const filtered = events.filter(e => e.id !== req.params.id);
   await storage.calendar.write(filtered);
+  if (eventToDelete) {
+    await logAction(req.session.user?.username || 'Système', 'EVENT_DELETED', `Événement supprimé: ${eventToDelete.title}`, eventToDelete);
+  }
   res.json({ success: true });
 });
 
@@ -246,8 +275,10 @@ app.put('/api/raids/:id', requireAdmin, async (req: AuthRequest, res) => {
   const index = raids.findIndex(r => r.id === req.params.id);
   if (index === -1) return res.status(404).json({ error: 'Raid not found' });
   
+  const oldRaid = raids[index];
   raids[index] = { ...raids[index], ...req.body, id: req.params.id };
   await storage.raids.write(raids);
+  await logAction(req.session.user?.username || 'Système', 'RAID_UPDATED', `Raid modifié: ${raids[index].instance}`, { old: oldRaid, new: raids[index] });
   res.json(raids[index]);
 });
 
@@ -307,6 +338,35 @@ app.get('/api/loot/member/:memberId', async (req, res) => {
   res.json(memberLoot);
 });
 
+app.put('/api/loot/:id', requireAdmin, async (req: AuthRequest, res) => {
+  const loot = await storage.loot.read();
+  const index = loot.findIndex(l => l.id === req.params.id);
+  if (index === -1) return res.status(404).json({ error: 'Loot not found' });
+  
+  const oldLoot = loot[index];
+  loot[index] = { ...loot[index], ...req.body, id: req.params.id };
+  await storage.loot.write(loot);
+  await logAction(req.session.user?.username || 'Système', 'LOOT_UPDATED', `Objet modifié: ${loot[index].itemName}`, { old: oldLoot, new: loot[index] });
+  res.json(loot[index]);
+});
+
+app.delete('/api/loot/:id', requireAdmin, async (req: AuthRequest, res) => {
+  const loot = await storage.loot.read();
+  const lootToDelete = loot.find(l => l.id === req.params.id);
+  const filtered = loot.filter(l => l.id !== req.params.id);
+  await storage.loot.write(filtered);
+  if (lootToDelete) {
+    await logAction(req.session.user?.username || 'Système', 'LOOT_DELETED', `Objet supprimé: ${lootToDelete.itemName}`, lootToDelete);
+  }
+  res.json({ success: true });
+});
+
+// Logs (admin only)
+app.get('/api/logs', requireAdmin, async (req: AuthRequest, res) => {
+  const logs = await storage.logs.read();
+  res.json(logs.sort((a: Log, b: Log) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()));
+});
+
 app.post('/api/loot', requireAdmin, async (req: AuthRequest, res) => {
   const loot = await storage.loot.read();
   const newLoot: Loot = {
@@ -316,6 +376,7 @@ app.post('/api/loot', requireAdmin, async (req: AuthRequest, res) => {
   };
   loot.push(newLoot);
   await storage.loot.write(loot);
+  await logAction(req.session.user?.username || 'Système', 'LOOT_CREATED', `Objet ajouté: ${newLoot.itemName}`, newLoot);
   res.json(newLoot);
 });
 

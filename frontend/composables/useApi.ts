@@ -59,6 +59,10 @@ export const useApi = () => {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+    updateEvent: (id: string, data: any) => fetchApi(`/api/calendar/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
     deleteEvent: (id: string) => fetchApi(`/api/calendar/${id}`, {
       method: 'DELETE',
     }),
@@ -84,5 +88,18 @@ export const useApi = () => {
       method: 'POST',
       body: JSON.stringify(data),
     }),
+    updateLoot: (id: string, data: any) => fetchApi(`/api/loot/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+    deleteLoot: (id: string) => fetchApi(`/api/loot/${id}`, {
+      method: 'DELETE',
+    }),
+
+    // Events
+    getEvents: () => fetchApi('/api/calendar'),
+
+    // Logs (admin only)
+    getLogs: () => fetchApi('/api/logs'),
   };
 };

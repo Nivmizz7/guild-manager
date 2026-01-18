@@ -112,3 +112,12 @@ export interface Loot {
   assignedTo: string;
   date: string;
 }
+
+export interface Log {
+  id: string;
+  timestamp: string;
+  username: string;
+  action: string;
+  description: string;
+  details: any;
+}
