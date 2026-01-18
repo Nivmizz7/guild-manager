@@ -1,18 +1,19 @@
 # WoW Guild Manager
 
-Application web de gestion de guilde World of Warcraft autonome et auto-hebergee.
+Self-hosted web application for World of Warcraft guild management.
 
 ## Description
 
-Application locale permettant la gestion complete d'une guilde World of Warcraft sans base de donnees, uniquement avec des fichiers JSON locaux.
+Local application for complete World of Warcraft guild management without a database, using only local JSON files.
 
-Fonctionnalites :
-- Gestion des membres (classe, role, specialisation)
-- Planification des raids et donjons
-- Calendrier d'evenements
-- Suivi du loot
-- Interface thematique WoW (Horde/Alliance)
-- Support toutes versions (Vanilla a The War Within)
+Features:
+- Member management (class, role, specialization)
+- Raid and dungeon planning
+- Event calendar
+- Loot tracking
+- WoW themed interface (Horde/Alliance)
+- Support for all versions (Vanilla to The War Within)
+- Multi-language support (FR/EN)
 
 ## Installation
 
@@ -20,72 +21,72 @@ Fonctionnalites :
 npm install
 ```
 
-Cette commande installe automatiquement toutes les dependances (backend et frontend).
+This command automatically installs all dependencies (backend and frontend).
 
-## Demarrage
+## Starting
 
 ```bash
 npm start
 ```
 
-L'application sera accessible sur :
+The application will be accessible at:
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:3001
 
-Au premier lancement, un assistant de configuration vous guidera pour :
-- Definir le nom de la guilde
-- Choisir la faction (Horde/Alliance)
-- Selectionner la version du jeu
+On first launch, a setup wizard will guide you to:
+- Define the guild name
+- Choose the faction (Horde/Alliance)
+- Select the game version
 
 ## Architecture
 
 ```
 /
-├── backend/          Express + TypeScript (API REST)
+├── backend/          Express + TypeScript (REST API)
 ├── frontend/         Nuxt 3 + Vue 3 (Interface)
-├── data/            Stockage JSON (cree automatiquement)
-└── package.json     Scripts NPM
+├── data/            JSON storage (auto-created)
+└── package.json     NPM scripts
 ```
 
-## Stockage des donnees
+## Data Storage
 
-Toutes les donnees sont stockees dans le dossier `/data` sous forme de fichiers JSON :
-- config.json - Configuration de la guilde
-- guild.json - Informations generales
-- members.json - Liste des membres
-- raids.json - Raids planifies
-- calendar.json - Evenements
-- loot.json - Historique du loot
+All data is stored in the `/data` folder as JSON files:
+- config.json - Guild configuration
+- guild.json - General information
+- members.json - Members list
+- raids.json - Planned raids
+- calendar.json - Events
+- loot.json - Loot history
 
-## Deploiement multi-guildes
+## Multi-Guild Deployment
 
-Chaque copie du dossier represente une guilde independante :
+Each folder copy represents an independent guild:
 
 ```bash
-cp -r wow-guild-manager/ ma-guilde/
-cd ma-guilde/
+cp -r wow-guild-manager/ my-guild/
+cd my-guild/
 npm start
 ```
 
-## API REST
+## REST API
 
-Le backend expose une API REST complete sur le port 3001 :
+The backend exposes a complete REST API on port 3001:
 
 **Configuration**
 - GET /api/config
 - POST /api/config
 
-**Guilde**
+**Guild**
 - GET /api/guild
 - PUT /api/guild
 
-**Membres**
+**Members**
 - GET /api/members
 - POST /api/members
 - PUT /api/members/:id
 - DELETE /api/members/:id
 
-**Calendrier**
+**Calendar**
 - GET /api/calendar
 - POST /api/calendar
 - DELETE /api/calendar/:id
@@ -101,27 +102,27 @@ Le backend expose une API REST complete sur le port 3001 :
 - GET /api/loot/member/:memberId
 - POST /api/loot
 
-## Commandes disponibles
+## Available Commands
 
 ```bash
-npm install    # Installation complete (backend + frontend)
-npm start      # Demarrage de l'application
-npm run build  # Build du backend
-npm run clean  # Nettoyage des builds et donnees
+npm install    # Complete installation (backend + frontend)
+npm start      # Start the application
+npm run build  # Build the backend
+npm run clean  # Clean builds and data
 ```
 
 ## Technologies
 
 - Backend: Node.js, Express, TypeScript
 - Frontend: Nuxt 3, Vue 3, TypeScript
-- Stockage: Fichiers JSON (fs)
-- Pas de Docker, pas de base de donnees
+- Storage: JSON files (fs)
+- No Docker, no database
 
-## Configuration requise
+## Requirements
 
-- Node.js 18 ou superieur
-- NPM 9 ou superieur
+- Node.js 18 or higher
+- NPM 9 or higher
 
-## Licence
+## License
 
 MIT

@@ -1,4 +1,4 @@
-# Demarrage rapide
+# Quick Start
 
 ## Installation
 
@@ -6,37 +6,37 @@
 npm install
 ```
 
-Cette commande installe automatiquement toutes les dependances (backend + frontend).
+This command automatically installs all dependencies (backend + frontend).
 
-## Lancement
+## Launch
 
 ```bash
 npm start
 ```
 
-L'application demarre automatiquement :
+The application starts automatically:
 - Backend API: http://localhost:3001
 - Frontend: http://localhost:3000
 
-Ouvrez votre navigateur sur http://localhost:3000
+Open your browser at http://localhost:3000
 
-## Premier lancement
+## First Launch
 
-Au premier acces, vous verrez un assistant de configuration :
-1. Entrez le nom de votre guilde
-2. Choisissez votre faction (Horde ou Alliance)
-3. Selectionnez la version de WoW
-4. Cliquez sur "Creer la guilde"
+On first access, you will see a configuration wizard:
+1. Enter your guild name
+2. Choose your faction (Horde or Alliance)
+3. Select the WoW version
+4. Click "Create Guild"
 
 ## Structure
 
-- /backend - API REST (Express + TypeScript)
-- /frontend - Interface web (Nuxt 3 + Vue)
-- /data - Stockage JSON (cree automatiquement)
+- /backend - REST API (Express + TypeScript)
+- /frontend - Web interface (Nuxt 3 + Vue)
+- /data - JSON storage (auto-created)
 
-## Commandes
+## Commands
 
-- `npm install` - Installation complete
-- `npm start` - Demarrer l'application
-- `npm run build` - Build du backend
-- `npm run clean` - Nettoyer les builds et donnees
+- `npm install` - Complete installation
+- `npm start` - Start the application
+- `npm run build` - Build the backend
+- `npm run clean` - Clean builds and data

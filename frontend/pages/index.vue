@@ -1,22 +1,22 @@
 <template>
   <div class="container">
     <div v-if="loading" class="wow-panel" style="text-align: center;">
-      <h2>⏳ Chargement...</h2>
+      <h2>⏳ {{ t('loading') }}</h2>
     </div>
 
     <div v-else-if="!config.setupComplete" class="setup-wizard">
       <div class="wow-panel">
-        <h1>🎮 Bienvenue dans WoW Guild Manager</h1>
-        <p style="margin-bottom: 2rem;">Configurez votre guilde pour commencer</p>
+        <h1>🎮 {{ t('welcome') }}</h1>
+        <p style="margin-bottom: 2rem;">{{ t('setupGuild') }}</p>
 
         <form @submit.prevent="saveSetup">
           <div class="form-group">
-            <label>Nom de la guilde</label>
+            <label>{{ t('guildName') }}</label>
             <input v-model="setupData.name" class="wow-input" required />
           </div>
 
           <div class="form-group">
-            <label>Faction</label>
+            <label>{{ t('faction') }}</label>
             <select v-model="setupData.faction" class="wow-select" required>
               <option value="Horde">Horde</option>
               <option value="Alliance">Alliance</option>
@@ -24,7 +24,7 @@
           </div>
 
           <div class="form-group">
-            <label>Version du jeu</label>
+            <label>{{ t('gameVersion') }}</label>
             <select v-model="setupData.version" class="wow-select" required>
               <option value="Vanilla">Vanilla (1.12)</option>
               <option value="TBC">The Burning Crusade</option>
@@ -40,7 +40,7 @@
             </select>
           </div>
 
-          <button type="submit" class="wow-button">Créer la guilde</button>
+          <button type="submit" class="wow-button">{{ t('createGuild') }}</button>
         </form>
       </div>
     </div>
@@ -50,28 +50,28 @@
       
       <div class="stats-grid">
         <div class="wow-panel stat-card">
-          <h3>👥 Membres</h3>
+          <h3>👥 {{ t('members') }}</h3>
           <div class="stat-value">{{ guild.memberCount }}</div>
         </div>
 
         <div class="wow-panel stat-card">
-          <h3>⚔️ Raids actifs</h3>
+          <h3>⚔️ {{ t('activeRaids') }}</h3>
           <div class="stat-value">{{ upcomingRaids }}</div>
         </div>
 
         <div class="wow-panel stat-card">
-          <h3>🎯 Version</h3>
+          <h3>🎯 {{ t('version') }}</h3>
           <div class="stat-value">{{ guild.version }}</div>
         </div>
 
         <div class="wow-panel stat-card">
-          <h3>🛡️ Faction</h3>
+          <h3>🛡️ {{ t('faction') }}</h3>
           <div class="stat-value">{{ guild.faction }}</div>
         </div>
       </div>
 
       <div class="wow-panel" style="margin-top: 2rem;">
-        <h2>Répartition des classes</h2>
+        <h2>{{ t('classDistribution') }}</h2>
         <div class="class-distribution">
           <div v-for="(count, className) in guild.classDistribution" :key="className" class="class-bar">
             <span :class="'class-' + className">{{ className }}</span>
@@ -84,7 +84,7 @@
       </div>
 
       <div class="wow-panel" style="margin-top: 2rem;">
-        <h2>Répartition des rôles</h2>
+        <h2>{{ t('roleDistribution') }}</h2>
         <div class="role-distribution">
           <div v-for="(count, role) in guild.roleDistribution" :key="role" class="role-item">
             <span class="role-name">{{ role }}</span>
@@ -97,6 +97,7 @@
 </template>
 
 <script setup lang="ts">
+const { t } = useI18n();
 const api = useApi();
 const config = useState('config');
 const loading = ref(true);
